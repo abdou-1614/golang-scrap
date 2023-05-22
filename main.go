@@ -163,6 +163,8 @@ func getResult(link string) ([]Result, error) {
 			log.Printf("Error navigating to URL: %v\n", err)
 		}
 
+		fmt.Println("GOTO SUCCESS")
+
 		var status, bankName string
 
 		err = chromedp.Run(ctx,
