@@ -136,7 +136,6 @@ func getResult(link string) ([]Result, error) {
 	opts := append(chromedp.DefaultExecAllocatorOptions[:],
 		chromedp.Headless,
 		chromedp.NoSandbox,
-		chromedp.Flag("disable-extensions", true),
 		chromedp.Flag("disable-dev-shm-usage", true),
 	)
 	allowCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
