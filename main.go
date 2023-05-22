@@ -9,7 +9,6 @@ import (
 
 	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/chromedp"
-	"github.com/joho/godotenv"
 )
 
 var Link_list = []string{
@@ -61,11 +60,6 @@ var Link_list = []string{
 }
 
 func main() {
-	err := godotenv.Load()
-
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
 
 	sendRequest()
 
