@@ -177,7 +177,6 @@ func getResult(link string) ([]Result, error) {
 			Link:     link,
 			Url:      url,
 		})
-		log.Printf("BANK NAME: %v\n STATUS: %v\n LINK: %v\n URL: %v\n", bankName, status, link, url)
 		fmt.Println("SEND RESULT SUCCESS.")
 	}
 	return result, nil
