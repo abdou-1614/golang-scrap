@@ -152,7 +152,7 @@ func getResult(link string) ([]Result, error) {
 		err := chromedp.Run(ctx,
 			network.Enable(),
 			chromedp.Navigate(url),
-			//chromedp.WaitVisible("section.forecast-box-graph", chromedp.ByQuery),
+			chromedp.WaitVisible("section.forecast-box-graph", chromedp.ByQuery),
 		)
 
 		if err != nil {
