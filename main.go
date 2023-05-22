@@ -137,6 +137,9 @@ func getResult(link string) ([]Result, error) {
 		chromedp.Headless,
 		chromedp.DisableGPU,
 		chromedp.NoSandbox,
+		chromedp.Flag("disable-extensions", true),
+		chromedp.Flag("disable-dev-shm-usage", true),
+		chromedp.Flag("disable-background-networking", true),
 	)
 	allowCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
 
