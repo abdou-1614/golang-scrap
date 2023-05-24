@@ -124,7 +124,7 @@ func scrape() {
 			}
 
 			fmt.Println("\n\nWaiting for 10 seconds")
-			waitBeforeNextIteration(10 * time.Second)
+			waitBeforeNextIteration(5 * time.Second)
 		}
 	}
 }
