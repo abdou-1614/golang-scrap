@@ -124,8 +124,8 @@ func scrape() {
 				}
 			}
 
-			fmt.Println("\n\nWaiting for 5 seconds")
-			waitBeforeNextIteration(5 * time.Second)
+			fmt.Println("\n\nWaiting for 2 seconds")
+			waitBeforeNextIteration(2 * time.Second)
 		}
 	}
 }
@@ -165,7 +165,7 @@ func getResult(link string) ([]Result, error) {
 			}
 			log.Printf("Error navigating to URL: %v\n", err)
 			fmt.Printf("Retrying URL: %s\n", url)
-			time.Sleep(10 * time.Second) // Wait for 10 seconds before retrying
+			time.Sleep(2 * time.Second) // Wait for 10 seconds before retrying
 		}
 
 		if err != nil {
