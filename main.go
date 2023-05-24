@@ -135,9 +135,8 @@ func getResult(link string) ([]Result, error) {
 	timeFrame := []int{1, 5, 15}
 
 	opts := append(chromedp.DefaultExecAllocatorOptions[:],
-		//chromedp.Headless,
+		chromedp.Headless,
 		chromedp.NoSandbox,
-		chromedp.DisableGPU,
 	)
 	allowCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
 
@@ -151,19 +150,31 @@ func getResult(link string) ([]Result, error) {
 		url := fmt.Sprintf("%s?timeFrame=%d", link, i*60)
 		fmt.Printf("GETTING, %s\n", url)
 
-		err := chromedp.Run(ctx,
-			network.Enable(),
-			chromedp.Navigate(url),
-			chromedp.WaitVisible("section.forecast-box-graph", chromedp.ByQuery),
-		)
+		var status, bankName string
+		var err error
+
+		// Retry logic
+		for retries := 0; retries < 3; retries++ {
+			err = chromedp.Run(ctx,
+				network.Enable(),
+				chromedp.Navigate(url),
+				chromedp.WaitVisible("section.forecast-box-graph", chromedp.ByQuery),
+			)
+
+			if err == nil {
+				break // Break out of the retry loop if successful
+			}
+
+			log.Printf("Error navigating to URL (retry %d): %v\n", retries+1, err)
+			time.Sleep(10 * time.Second) // Wait for 10 seconds before retrying
+		}
 
 		if err != nil {
 			log.Printf("Error navigating to URL: %v\n", err)
+			continue
 		}
 
 		fmt.Println("GOTO SUCCESS")
-
-		var status, bankName string
 
 		err = chromedp.Run(ctx,
 			chromedp.TextContent("section.forecast-box-graph .title", &status, chromedp.ByQuery),
