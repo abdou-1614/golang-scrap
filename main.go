@@ -123,7 +123,7 @@ func scrape() {
 				}
 			}
 
-			fmt.Println("\n\nWaiting for 10 seconds")
+			fmt.Println("\n\nWaiting for 5 seconds")
 			waitBeforeNextIteration(5 * time.Second)
 		}
 	}
