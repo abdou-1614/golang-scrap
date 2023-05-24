@@ -99,6 +99,7 @@ func scrape() {
 			results, err := getResult(link)
 			if err != nil {
 				log.Printf("Error getting results: %v\n", err)
+
 				continue
 			}
 
