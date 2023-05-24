@@ -1,14 +1,12 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net/http"
 	"time"
 
-	"github.com/chromedp/cdproto/network"
-	"github.com/chromedp/chromedp"
+	"github.com/go-rod/rod"
 )
 
 var Link_list = []string{
@@ -131,67 +129,40 @@ func scrape() {
 }
 
 func getResult(link string) ([]Result, error) {
-	result := make([]Result, 0)
-	timeFrame := []int{1, 5, 15}
+	results := make([]Result, 0)
 
-	opts := append(chromedp.DefaultExecAllocatorOptions[:],
-		chromedp.Headless,
-		chromedp.NoSandbox,
-	)
-	allowCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
+	// Create a new browser instance
+	browser := rod.New().MustConnect()
+	defer browser.MustClose()
 
-	defer cancel()
+	// Create a new page
+	page := browser.MustPage(link)
+	page.MustWaitLoad()
 
-	ctx, cancel := chromedp.NewContext(allowCtx)
-
-	defer cancel()
-
-	for _, i := range timeFrame {
-		url := fmt.Sprintf("%s?timeFrame=%d", link, i*60)
+	for _, timeframe := range []int{1, 5, 15} {
+		url := fmt.Sprintf("%s?timeFrame=%d", link, timeframe*60)
 		fmt.Printf("GETTING, %s\n", url)
 
-		var status, bankName string
-		var err error
+		// Navigate to the URL
+		page.MustNavigate(url)
+		page.MustWaitLoad()
 
-		// Retry logic
-		for retries := 0; retries < 3; retries++ {
-			err = chromedp.Run(ctx,
-				network.Enable(),
-				chromedp.Navigate(url),
-				chromedp.WaitVisible("section.forecast-box-graph", chromedp.ByQuery),
-			)
-			if err == nil {
-				break // Success, no need to retry
-			}
-			log.Printf("Error navigating to URL: %v\n", err)
-			fmt.Printf("Retrying URL: %s\n", url)
-			time.Sleep(2 * time.Second) // Wait for 10 seconds before retrying
-		}
+		// Extract the status and bank name
+		status := page.MustElement("section.forecast-box-graph .title").MustText()
+		bankName := page.MustElement("h1.main-title.js-main-title").MustText()
 
-		if err != nil {
-			log.Printf("Failed to navigate to URL: %v\n", err)
-			continue
-		}
-
-		fmt.Println("GOTO SUCCESS")
-
-		err = chromedp.Run(ctx,
-			chromedp.TextContent("section.forecast-box-graph .title", &status, chromedp.ByQuery),
-			chromedp.TextContent("h1.main-title.js-main-title", &bankName, chromedp.ByQuery),
-		)
-		if err != nil {
-			log.Printf("Error getting text content: %v\n", err)
-			continue
-		}
-		result = append(result, Result{
+		result := Result{
 			BankName: bankName,
 			Status:   status,
 			Link:     link,
 			Url:      url,
-		})
+		}
+		results = append(results, result)
+
 		fmt.Println("SEND RESULT SUCCESS.")
 	}
-	return result, nil
+
+	return results, nil
 }
 
 func sendAlertToTG(alertMsg string) {
