@@ -136,6 +136,7 @@ func getResult(link string) ([]Result, error) {
 	opts := append(chromedp.DefaultExecAllocatorOptions[:],
 		chromedp.Headless,
 		chromedp.NoSandbox,
+		chromedp.DisableGPU,
 	)
 	allowCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
 
