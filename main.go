@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
 	"time"
 
-	"github.com/go-rod/rod"
+	"github.com/chromedp/cdproto/network"
+	"github.com/chromedp/chromedp"
 )
 
 var Link_list = []string{
@@ -122,47 +124,64 @@ func scrape() {
 				}
 			}
 
-			fmt.Println("\n\nWaiting for 2 seconds")
-			waitBeforeNextIteration(2 * time.Second)
+			fmt.Println("\n\nWaiting for 5 seconds")
+			waitBeforeNextIteration(5 * time.Second)
 		}
 	}
 }
 
 func getResult(link string) ([]Result, error) {
-	results := make([]Result, 0)
+	result := make([]Result, 0)
+	timeFrame := []int{1, 5, 15}
 
-	// Create a new browser instance
-	browser := rod.New().MustConnect()
-	defer browser.MustClose()
+	opts := append(chromedp.DefaultExecAllocatorOptions[:],
+		//chromedp.Headless,
+		chromedp.NoSandbox,
+		chromedp.DisableGPU,
+	)
+	allowCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
 
-	// Create a new page
-	page := browser.MustPage(link)
-	page.MustWaitLoad()
+	defer cancel()
 
-	for _, timeframe := range []int{1, 5, 15} {
-		url := fmt.Sprintf("%s?timeFrame=%d", link, timeframe*60)
+	ctx, cancel := chromedp.NewContext(allowCtx)
+
+	defer cancel()
+
+	for _, i := range timeFrame {
+		url := fmt.Sprintf("%s?timeFrame=%d", link, i*60)
 		fmt.Printf("GETTING, %s\n", url)
 
-		// Navigate to the URL
-		page.MustNavigate(url)
-		page.MustWaitLoad()
+		err := chromedp.Run(ctx,
+			network.Enable(),
+			chromedp.Navigate(url),
+			chromedp.WaitVisible("section.forecast-box-graph", chromedp.ByQuery),
+		)
 
-		// Extract the status and bank name
-		status := page.MustElement("section.forecast-box-graph .title").MustText()
-		bankName := page.MustElement("h1.main-title.js-main-title").MustText()
+		if err != nil {
+			log.Printf("Error navigating to URL: %v\n", err)
+		}
 
-		result := Result{
+		fmt.Println("GOTO SUCCESS")
+
+		var status, bankName string
+
+		err = chromedp.Run(ctx,
+			chromedp.TextContent("section.forecast-box-graph .title", &status, chromedp.ByQuery),
+			chromedp.TextContent("h1.main-title.js-main-title", &bankName, chromedp.ByQuery),
+		)
+		if err != nil {
+			log.Printf("Error getting text content: %v\n", err)
+			continue
+		}
+		result = append(result, Result{
 			BankName: bankName,
 			Status:   status,
 			Link:     link,
 			Url:      url,
-		}
-		results = append(results, result)
-
+		})
 		fmt.Println("SEND RESULT SUCCESS.")
 	}
-
-	return results, nil
+	return result, nil
 }
 
 func sendAlertToTG(alertMsg string) {
