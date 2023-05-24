@@ -96,22 +96,10 @@ func scrape() {
 			sell := true
 			focusCount := 0
 
-			var results []Result
-			var err error
-
-			for retry := 1; retry <= 3; retry++ {
-				results, err = getResult(link)
-				if err == nil {
-					break
-				}
-
-				log.Printf("Error getting results (retry %d): %v\n", retry, err)
-				fmt.Println("Retrying after 10 seconds...")
-				waitBeforeNextIteration(10 * time.Second)
-			}
-
+			results, err := getResult(link)
 			if err != nil {
-				log.Printf("Error getting results after retries: %v\n", err)
+				log.Printf("Error getting results: %v\n", err)
+
 				continue
 			}
 
@@ -136,8 +124,8 @@ func scrape() {
 				}
 			}
 
-			fmt.Println("\n\nWaiting for 10 seconds")
-			waitBeforeNextIteration(10 * time.Second)
+			fmt.Println("\n\nWaiting for 5 seconds")
+			waitBeforeNextIteration(5 * time.Second)
 		}
 	}
 }
@@ -147,9 +135,8 @@ func getResult(link string) ([]Result, error) {
 	timeFrame := []int{1, 5, 15}
 
 	opts := append(chromedp.DefaultExecAllocatorOptions[:],
-		//chromedp.Headless,
+		chromedp.Headless,
 		chromedp.NoSandbox,
-		chromedp.DisableGPU,
 	)
 	allowCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
 
@@ -163,19 +150,30 @@ func getResult(link string) ([]Result, error) {
 		url := fmt.Sprintf("%s?timeFrame=%d", link, i*60)
 		fmt.Printf("GETTING, %s\n", url)
 
-		err := chromedp.Run(ctx,
-			network.Enable(),
-			chromedp.Navigate(url),
-			chromedp.WaitVisible("section.forecast-box-graph", chromedp.ByQuery),
-		)
+		var status, bankName string
+		var err error
+
+		// Retry logic
+		for retries := 0; retries < 3; retries++ {
+			err = chromedp.Run(ctx,
+				network.Enable(),
+				chromedp.Navigate(url),
+				chromedp.WaitVisible("section.forecast-box-graph", chromedp.ByQuery),
+			)
+			if err == nil {
+				break // Success, no need to retry
+			}
+			log.Printf("Error navigating to URL: %v\n", err)
+			fmt.Printf("Retrying URL: %s\n", url)
+			time.Sleep(10 * time.Second) // Wait for 10 seconds before retrying
+		}
 
 		if err != nil {
-			log.Printf("Error navigating to URL: %v\n", err)
+			log.Printf("Failed to navigate to URL: %v\n", err)
+			continue
 		}
 
 		fmt.Println("GOTO SUCCESS")
-
-		var status, bankName string
 
 		err = chromedp.Run(ctx,
 			chromedp.TextContent("section.forecast-box-graph .title", &status, chromedp.ByQuery),
