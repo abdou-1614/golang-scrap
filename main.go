@@ -142,11 +142,14 @@ func getResult(link string) ([]Result, error) {
 
 	defer cancel()
 
+	ctx, cancel := chromedp.NewContext(allowCtx)
+
+	defer cancel()
+
 	for _, i := range timeFrame {
 		url := fmt.Sprintf("%s?timeFrame=%d", link, i*60)
 		fmt.Printf("GETTING, %s\n", url)
 
-		ctx, cancel := chromedp.NewContext(allowCtx)
 		err := chromedp.Run(ctx,
 			network.Enable(),
 			chromedp.Navigate(url),
@@ -167,7 +170,6 @@ func getResult(link string) ([]Result, error) {
 		)
 		if err != nil {
 			log.Printf("Error getting text content: %v\n", err)
-			cancel()
 			continue
 		}
 		result = append(result, Result{
@@ -177,7 +179,6 @@ func getResult(link string) ([]Result, error) {
 			Url:      url,
 		})
 		fmt.Println("SEND RESULT SUCCESS.")
-		cancel()
 	}
 	return result, nil
 }
