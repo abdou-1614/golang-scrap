@@ -138,7 +138,6 @@ func getResult(link string) ([]Result, error) {
 		chromedp.ExecPath("/usr/bin/google-chrome-stable"),
 		chromedp.Headless,
 		chromedp.NoSandbox,
-		chromedp.DisableGPU,
 	)
 	allowCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
 
