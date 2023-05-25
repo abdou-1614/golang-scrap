@@ -4,10 +4,9 @@ FROM golang:1.20
 WORKDIR /app
 
 # Download and install Google Chrome
-RUN wget https://dl.google.com/go/go1.17.2.linux-amd64.tar.gz
-RUN tar -C /usr/local -xzf go1.17.2.linux-amd64.tar.gz
-
-RUN rm go1.17.2.linux-amd64.tar.gz
+RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
+RUN sh -c 'echo "deb [arch=amd64] https://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list'
+RUN apt-get update && apt-get install -y google-chrome-stable
 
 # Copy Go module files and download dependencies
 COPY go.mod .
