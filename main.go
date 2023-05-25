@@ -135,8 +135,10 @@ func getResult(link string) ([]Result, error) {
 	timeFrame := []int{1, 5, 15}
 
 	opts := append(chromedp.DefaultExecAllocatorOptions[:],
-		chromedp.Headless,
 		chromedp.NoSandbox,
+		chromedp.Flag("headless", false),
+		chromedp.Flag("enable-automation", false),
+		chromedp.Flag("disable-extensions", true),
 	)
 	allowCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
 
