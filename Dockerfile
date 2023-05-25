@@ -17,4 +17,6 @@ COPY . .
 
 RUN go build -o main .
 
+EXPOSE 4004
+
 CMD [ "./main" ]
