@@ -135,6 +135,7 @@ func getResult(link string) ([]Result, error) {
 	timeFrame := []int{1, 5, 15}
 
 	opts := append(chromedp.DefaultExecAllocatorOptions[:],
+		chromedp.ExecPath("/usr/bin/google-chrome-stable"),
 		chromedp.Headless,
 		chromedp.NoSandbox,
 		chromedp.DisableGPU,
